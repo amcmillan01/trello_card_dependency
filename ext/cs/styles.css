@@ -1,0 +1,42 @@
+._cd_ctn {
+}
+
+._cd_ctn ._cd_input {
+    display: inline-block;
+    border-radius: 3px 0 0 3px;
+    margin: 0;
+    width: 300px;
+    padding: 0 0 0 5px;
+    min-height: 25px;
+    background: #fff;
+}
+
+._cd_ctn ._cd_add_dep {
+    border-radius: 0 3px 3px 0;
+    box-shadow: none;
+    padding: 0 4px;
+    margin: 0;
+    min-height: 25px;
+}
+
+._cd_ctn .dependencies {
+    padding: 7px 7px 7px 0;
+}
+
+._cd_ctn .done {
+    border-radius: 3px;
+    display: inline-block;
+    background: #6bb465;
+    margin-left: 3px;
+    padding: 1px 3px;
+    color: #000;
+}
+
+._cd_ctn .closed {
+    border-radius: 3px;
+    display: inline-block;
+    background: #8c0505;
+    margin-left: 3px;
+    padding: 1px 3px;
+    color: #000;
+}

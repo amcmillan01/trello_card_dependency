@@ -1,0 +1,32 @@
+{
+  "name": "Trello Card Dependency",
+  "version": "1.0.0",
+  "manifest_version": 2,
+  "icons": {
+    "48": "logo.png"
+  },
+  "permissions": [
+    "tabs",
+    "activeTab"
+  ],
+  "background": {
+    "page": "bg/index.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://trello.com/*"
+      ],
+      "js": [
+        "jquery-2.2.2.min.js",
+        "cs/index.js"
+      ],
+      "css": [
+        "cs/styles.css"
+      ]
+    }
+  ],
+  "web_accessible_resources": [
+    "cs/*"
+  ]
+}
