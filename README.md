@@ -1,7 +1,7 @@
 Trello Card Dependency
 ======================
 
-### Gertting started
+### Gertting started.
 
 - install the extension
 - open your Trello Card
