@@ -10,45 +10,117 @@
   var currentCardId = null;
   var currentChecklistId = null;
 
-  var errorHandler = function(e){
+  var errorHandler = function(e) {
     console.log('ERROR', e);
   };
 
-  var getCardInfo = function(link){
+  /**
+   * get the token need for writes
+   * @return {string}
+   */
+  var getToken = function() {
+    return unescape(window.token.trim().replace('token=', ''));
+  };
+
+  /**
+   *
+   * @param {string} link
+   * @return {Promise}
+   */
+  var getCardInfo = function(link) {
     var dfd = $.Deferred();
     var parts = $('<a href="' + link + '"></a>')[0].pathname.split('/');
-    if(!/^https?\:\/\//.test(link)){
+    if (!/^https?\:\/\//.test(link)) {
       parts = ['', '', ''];
     }
     if (parts[1] === 'c' && parts[2]) {
-      $.get('/1/cards/'+parts[2] + '?fields=name,labels,closed,shortUrl').then(dfd.resolve, dfd.reject);
+      $.get('/1/cards/' + parts[2] + '?fields=name,labels,closed,shortUrl').then(dfd.resolve, dfd.reject);
     } else {
       dfd.resolve({
         name: link
       });
-  }
+    }
     return dfd.promise();
   };
 
+  /**
+   *
+   * @return {Promise}
+   */
   var getCardDependencyChecklist = function() {
     var dfd = $.Deferred();
-    $.get('/1/cards/' + currentCardId + '/checklists').then(function(items){
-      var checklist = items.filter(function(item){
+    $.get('/1/cards/' + currentCardId + '/checklists').then(function(items) {
+      var checklist = items.filter(function(item) {
         return item.name === CHECKLIST_NAME;
       });
-      dfd.resolve(checklist[0]? checklist[0] : null);
+      dfd.resolve(checklist[0] ? checklist[0] : null);
     }, dfd.reject);
     return dfd.promise();
   };
 
-  var addItemToCheckList = function(itemName){
-    return $.ajax({
-      url: '/1/cards/' + currentCardId + '/checklist/' + currentChecklistId + '/checkItem',
+  /**
+   * creates the `card_dependency` checklist for the current card
+   * @return {Promise}
+   */
+  var addChecklistToCard = function() {
+    var dfd = $.Deferred();
+    $.ajax({
+      url: '/1/cards/' + currentCardId + '/checklists',
       contentType: 'application/json',
       type: 'POST',
-      data : JSON.stringify({
-        name: itemName,
-        token: unescape(window.token.trim().replace('token=', ''))
+      data: JSON.stringify({
+        name: CHECKLIST_NAME,
+        token: getToken()
+      })
+    }).then(function(checklist) {
+      currentChecklistId = checklist.id;
+      dfd.resolve(checklist);
+    }, dfd.reject);
+
+    return dfd.promise();
+  };
+
+  /**
+   * add an item to the `card_dependency` checklist
+   * @param {string} itemName
+   * @return {Promise}
+   */
+  var addItemToCheckList = function(itemName) {
+    var dfd = $.Deferred();
+
+    var _add = function() {
+      $.ajax({
+        url: '/1/cards/' + currentCardId + '/checklist/' + currentChecklistId + '/checkItem',
+        contentType: 'application/json',
+        type: 'POST',
+        data: JSON.stringify({
+          name: itemName,
+          token: getToken()
+        })
+      }).then(dfd.resolve, dfd.reject);
+    };
+
+    if (!currentChecklistId) {
+      addChecklistToCard().then(_add, dfd.reject);
+    } else {
+      _add();
+    }
+
+    return dfd.promise();
+  };
+
+  /**
+   * remove an item from the `card_dependency` checklist
+   * @param {string} itemId
+   * @return {Promise}
+   */
+  var removeItemFromChecklist = function(itemId) {
+    return $.ajax({
+      url: '/1/cards/' + currentCardId + '/checklist/' + currentChecklistId + '/checkItem/' + itemId,
+      contentType: 'application/json',
+      method: 'DELETE',
+      data: JSON.stringify({
+        token: getToken()
       })
     });
   };
@@ -73,12 +145,15 @@
         '    <div class="checklist-progress-bar"><div class="checklist-progress-bar-current js-checklist-progress-bar" style="width: 0;"></div></div>' +
         '    <span class="checklist-completed-text hide quiet js-completed-message">Everything in this checklist is complete!</span>' +
         '  </div>' +
-        '  <div class="checklist-items-list js-checklist-items-list js-no-higher-edits ui-sortable"></div>'+
+        '  <div class="checklist-items-list js-checklist-items-list js-no-higher-edits ui-sortable"></div>' +
         '  <div class="checklist-new-item u-gutter js-new-checklist-item hide dependencies">' +
         '    <div class="checklist-new-item-text js-new-checklist-item-input">' +
         '      <input type="url" class="_cd_input" placeholder="https://trello.com/c/card_id"><button class="_cd_add_dep">add dependency</button>' +
         '    </div>' +
-        '    <div class="dep-error hide warning">Invalid Trello Card!</div>'+
+        '    <div class="dep-error hide warning">' +
+        '      Invalid Trello Card!' +
+        '      <span class="u-float-right tooltip-trigger dismiss">dismiss</span>' +
+        '    </div>' +
         '  </div>' +
         '</div>'
       );
@@ -90,22 +165,39 @@
 
   /**
    *
-   * @param {number} percent
    * @return {undefined}
    */
-  var updatePercentCompleted = function(percent){
-    var widget = getWidget();
-    widget.find('.checklist-progress-percentage').html(percent + '%');
-    widget.find('.checklist-progress-bar-current').width(percent + '%');
+  var updatePercentCompleted = function() {
+    if (totalComplete) {
+      var percent = (totalComplete / totalItems * 100).toFixed(0);
+      var widget = getWidget();
+      widget.find('.checklist-progress-percentage').html(percent + '%');
+      widget.find('.checklist-progress-bar-current').width(percent + '%');
+    }
+  };
+
+  /**
+   * event handler for removing a dependency
+   * @param {Event} e
+   * @return {undefined}
+   */
+  var removeDependencyHandler = function(e) {
+    var el = $(e.currentTarget).parents('.checklist-item');
+    removeItemFromChecklist(e.currentTarget.dataset.id).then(function() {
+      totalItems--;
+      el.remove();
+      updatePercentCompleted();
+    }, errorHandler);
   };
 
   /**
    *
    * @param {object} card
+   * @params {number} id
    * @params {number} index
    * @return {undefined}
    */
-  var addToList = function(card, index) {
+  var addToList = function(card, id, index) {
     var widget = getWidget();
     var cls = '';
     var doneEl = '';
@@ -138,6 +230,7 @@
 
     el.addClass(cls);
     el.html(
+      '<div class="remove-dep" data-id="' + id + '">X</div>' +
       '<div class="checklist-item-details">' +
       '<p class="checklist-item-details-text markeddown js-checkitem-name">' +
       '  <a href="' + card.shortUrl + '" class="known-service-link">' +
@@ -148,23 +241,41 @@
       '</div>'
     );
 
-    if (totalComplete) {
-      updatePercentCompleted( (totalComplete / totalItems * 100).toFixed(0));
-    }
+    el.find('.remove-dep').on('click', removeDependencyHandler);
+
+    updatePercentCompleted();
   };
 
+  /**
+   * hide the `card_dependency` checklist
+   * @return {undefined}
+   */
+  var hideOriginalChecklist = function() {
+    $('.checklist .checklist-title .current').each(function(i, el) {
+      if (el.innerText.trim().toLocaleLowerCase() === CHECKLIST_NAME) {
+        $(el).parents('.checklist').hide();
+      }
+    });
+  };
+
+  /**
+   * event handler for `add dependency` button
+   * @return {undefined}
+   */
   var addNewDependencyHandler = function() {
     var inputField = $(this).prev('input');
     var link = inputField.val().trim();
     var widget = getWidget();
     widget.find('.dep-error').hide();
 
-    getCardInfo(link).then(function(card){
-      if(card.id){
-        addItemToCheckList(link).then(function(item){
+    getCardInfo(link).then(function(card) {
+      if (card.id) {
+        addItemToCheckList(link).then(function(item) {
           console.log('checkItemslink', item);
           inputField.val('');
-          addToList(card);
+          totalItems++;
+          hideOriginalChecklist();
+          addToList(card, item.id);
         }, errorHandler);
       } else {
         widget.find('.dep-error').show();
@@ -172,38 +283,38 @@
     }, errorHandler);
   };
 
-  var hideOriginalChecklist = function(){
-    $('.checklist .checklist-title .current').each(function(i, el){
-      if (el.innerText.trim().toLocaleLowerCase() === CHECKLIST_NAME){
-        $(el).parents('.checklist').hide();
-      }
-    });
-  };
-
   /**
-   *
+   * initialize the widget
    * @return {undefined}
    */
   var init = function() {
     var widget = getWidget();
     widget.find('._cd_add_dep').on('click', addNewDependencyHandler);
+    widget.find('.dismiss').on('click', function() {
+      widget.find('.dep-error').hide();
+    });
+
+    widget.find('.window-module-title-icon').css({
+      'background-image': 'url("' + $('#' + CHECKLIST_NAME).data().logo + '")',
+      'background-size': 'cover'
+    });
 
     hideOriginalChecklist();
 
-    getCardDependencyChecklist().then(function(checklist){
+    getCardDependencyChecklist().then(function(checklist) {
       widget.find('.spinner').hide();
       widget.find('.dependencies').show();
 
-      if(checklist){
+      if (checklist) {
         currentChecklistId = checklist.id;
         totalItems = checklist.checkItems.length;
         totalComplete = 0;
 
         widget.find('.checklist-items-list').html('<div class="checklist-item"></div>'.repeat(totalItems));
 
-        checklist.checkItems.forEach(function(item, index){
+        checklist.checkItems.forEach(function(item, index) {
           getCardInfo(item.name).then(function(card) {
-            addToList(card, index);
+            addToList(card, item.id, index);
           }, errorHandler);
         });
       }
@@ -225,10 +336,13 @@
     console.log('FROM BG', data);
 
     setTimeout(function() {
-      $.get('/1/cards/' + data.shortlink + '?fields=name').then(function(card) {
-        currentCardId = card.id;
-        init();
-      }, errorHandler);
+      if (location.pathname.match(/^\/c\//)) {
+        var parts = location.pathname.split('/');
+        $.get('/1/cards/' + parts[2] + '?fields=name').then(function(card) {
+          currentCardId = card.id;
+          init();
+        }, errorHandler);
+      }
     }, 200);
 
   });

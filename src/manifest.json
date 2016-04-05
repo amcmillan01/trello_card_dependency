@@ -2,15 +2,17 @@
   "name": "Trello Card Dependency",
   "version": "1.0.0",
   "manifest_version": 2,
+  "homepage_url": "https://github.com/amcmillan01/trello_card_dependency",
   "icons": {
     "48": "logo.png"
   },
   "permissions": [
     "tabs",
-    "activeTab"
+    "activeTab",
+    "webNavigation"
   ],
   "background": {
-    "page": "bg/index.html"
+    "scripts": ["bg/index.js"]
   },
   "content_scripts": [
     {
@@ -27,6 +29,7 @@
     }
   ],
   "web_accessible_resources": [
-    "cs/*"
+    "cs/*",
+    "logo-gray.png"
   ]
 }
