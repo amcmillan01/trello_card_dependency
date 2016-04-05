@@ -1,0 +1,19 @@
+{
+  "name": "trello_card_dependency",
+  "description": "A Chrome extension that adds card dependency ability via the card's checklist functionality",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "lint": "jshint ./src",
+    "test": "echo write some test",
+    "precut_release": "node deploy_scripts/update_manifest.js && git commit . -m 'cut new release'",
+    "cut_release": "git tag v`node -e 'console.log(require(\"./package.json\").version)'`",
+    "postcut_release": "npm --no-git-tag-version version patch && git commit . -m 'version bump'"
+  },
+  "devDependencies": {
+    "jshint": "^2.9.1",
+    "request": "^2.65.0",
+    "semver-compare": "^1.0.0"
+  }
+}

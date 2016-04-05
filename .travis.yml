@@ -1,0 +1,23 @@
+sudo:
+  false
+
+language:
+ node_js
+
+node_js:
+  - 0.10.31
+
+script:
+  - npm run prepare
+  - npm run lint
+
+after_success:
+  - bash publish.sh
+
+notifications:
+  email:
+    recipients:
+      - tates001@gmail.com
+      - amcmillan@yieldbot.com
+    on_success: always
+    on_failure: always
