@@ -13,7 +13,7 @@ if [ $EXIT_CODE == '0' ]
     echo "Creating zip file..."
     zip -r src.zip src
 
-    TOKEN=`node get_refresh_token.js`
+    TOKEN=`node deploy_scripts/get_refresh_token.js`
     EXIT_CODE=$?
     UPLOAD_URL="https://www.googleapis.com/upload/chromewebstore/v1.1/items/$APP_ID"
     PUBLISH_URL="https://www.googleapis.com/chromewebstore/v1.1/items/$APP_ID/publish"
