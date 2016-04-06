@@ -1,9 +1,12 @@
 Trello Card Dependency
 ======================
 
+[![Build Status](https://travis-ci.org/amcmillan01/trello_card_dependency.svg?branch=master)](https://travis-ci.org/amcmillan01/trello_card_dependency)
+[![GitHub version](https://badge.fury.io/gh/amcmillan01%2Ftrello_card_dependency.svg)](https://badge.fury.io/gh/amcmillan01%2Ftrello_card_dependency)
+
 ### Gertting started
 
-- install the extension
+- install the [extension](https://chrome.google.com/webstore/detail/trello-card-dependency/fpjmmfimiceofligmjbaicjieolmbcop)
 - open your Trello Card
 
 If you dont have any existing checklist that you're using to keep track of your dependencies, that's ok.
