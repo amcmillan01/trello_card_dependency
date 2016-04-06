@@ -12,7 +12,9 @@
     "webNavigation"
   ],
   "background": {
-    "scripts": ["bg/index.js"]
+    "scripts": [
+      "bg/index.js"
+    ]
   },
   "content_scripts": [
     {
@@ -31,5 +33,6 @@
   "web_accessible_resources": [
     "cs/*",
     "logo-gray.png"
-  ]
+  ],
+  "description": "A Chrome extension that adds card dependency ability via the card's checklist functionality"
 }
