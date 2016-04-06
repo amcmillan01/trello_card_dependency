@@ -12,7 +12,7 @@ script:
   - npm run lint
 
 after_success:
-  - bash publish.sh
+  - bash deploy_scripts/publish.sh
 
 notifications:
   email:
