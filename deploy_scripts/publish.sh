@@ -2,7 +2,7 @@
 
 # reference: https://developer.chrome.com/webstore/using_webstore_api
 
-CAN_PUBLISH=`node can_publish.js`
+CAN_PUBLISH=`node deploy_scripts/can_publish.js`
 EXIT_CODE=$?
 
 echo "[$EXIT_CODE] : $CAN_PUBLISH"
