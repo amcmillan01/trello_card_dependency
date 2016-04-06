@@ -1,6 +1,6 @@
 {
   "name": "trello_card_dependency",
-  "description": "A Chrome extension that adds card dependency ability via the card's checklist functionality",
+  "description": "Adds card dependency capability to Trello's web interface",
   "version": "1.0.4",
   "license": "MIT",
   "private": true,
