@@ -2,7 +2,7 @@ Trello Card Dependency
 ======================
 
 [![Build Status](https://travis-ci.org/amcmillan01/trello_card_dependency.svg?branch=master)](https://travis-ci.org/amcmillan01/trello_card_dependency)
-[![GitHub version](https://badge.fury.io/gh/amcmillan01%2Ftrello_card_dependency.svg)](https://badge.fury.io/gh/amcmillan01%2Ftrello_card_dependency)
+[![GitHub version](https://img.shields.io/github/tag/amcmillan01/trello_card_dependency.svg)]()
 
 ### Gertting started
 
