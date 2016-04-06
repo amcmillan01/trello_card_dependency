@@ -126,6 +126,23 @@
   };
 
   /**
+   * mark a given checklist item complete
+   * @param {string} itemId
+   * @return {Promise}
+   */
+  var markChecklistItemComplete = function(itemId) {
+    return $.ajax({
+      url: '/1/cards/' + currentCardId + '/checklist/' + currentChecklistId + '/checkItem/' + itemId,
+      contentType: 'application/json',
+      method: 'PUT',
+      data: JSON.stringify({
+        state: 'complete',
+        token: getToken()
+      })
+    });
+  };
+
+  /**
    * create the dependency widget below the card's description
    * @return {Element}
    */
@@ -193,32 +210,37 @@
   /**
    *
    * @param {object} card
-   * @params {number} id
-   * @params {number} index
+   * @param {number} itemId
+   * @param {number} index
    * @return {undefined}
    */
-  var addToList = function(card, id, index) {
+  var addToList = function(card, itemId, index) {
     var widget = getWidget();
     var cls = '';
-    var doneEl = '';
     var isComplete = false;
-    var doneLabel = card.labels.filter(function(o) {
-      return /^done$/i.test(o.name);
-    });
-
-    if (doneLabel[0]) {
-      cls += ' checklist-item-state-complete';
-      doneEl = '<span class="done">complete</span>';
-      isComplete = true;
-      totalComplete++;
-    }
-
-    if (card.closed) {
-      cls += ' checklist-item-state-complete';
-      doneEl = '<span class="closed">closed</span>';
-      if (!isComplete) {
+    var labels = card.labels.map(function(label){
+      var doneCls = '';
+      var style = 'color:'+label.color;
+      if(/^done$/i.test(label.name)){
+        style = '';
+        doneCls = 'done';
+        isComplete = true;
+        cls += ' checklist-item-state-complete';
         totalComplete++;
       }
+      return '<span class="label '+doneCls+'" style="'+style+'">'+label.name.toLocaleLowerCase()+'</span>';
+    });
+
+    if (card.closed) {
+      labels.push('<span class="label closed">closed</span>');
+      if (!isComplete) {
+        cls += ' checklist-item-state-complete';
+        totalComplete++;
+      }
+    }
+
+    if (isComplete) {
+      markChecklistItemComplete(itemId);
     }
 
     var el = $('<div class="checklist-item"></div>');
@@ -230,13 +252,13 @@
 
     el.addClass(cls);
     el.html(
-      '<div class="remove-dep" data-id="' + id + '">X</div>' +
+      '<div class="remove-dep" data-id="' + itemId + '">X</div>' +
       '<div class="checklist-item-details">' +
       '<p class="checklist-item-details-text markeddown js-checkitem-name">' +
       '  <a href="' + card.shortUrl + '" class="known-service-link">' +
       '    <img class="known-service-icon" src="' + SERVICE_IMG + '">' + card.name +
       '  </a>' +
-      doneEl +
+      labels.join('') +
       '</p>' +
       '</div>'
     );
@@ -343,7 +365,7 @@
           init();
         }, errorHandler);
       }
-    }, 200);
+    }, 400);
 
   });
 

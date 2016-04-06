@@ -23,22 +23,22 @@
     padding: 7px 7px 7px 0;
 }
 
-._cd_ctn .done {
+._cd_ctn .label {
     border-radius: 3px;
     display: inline-block;
-    background: #6bb465;
     margin-left: 3px;
+    margin-right: 3px;
     padding: 1px 3px;
-    color: #000;
+    background: #d6dadc;
+    font-weight: 800;
+}
+
+._cd_ctn .done {
+    color: #6bb465;
 }
 
 ._cd_ctn .closed {
-    border-radius: 3px;
-    display: inline-block;
-    background: #8c0505;
-    margin-left: 3px;
-    padding: 1px 3px;
-    color: #000;
+    color: #8c0505;
 }
 
 ._cd_ctn .remove-dep {
