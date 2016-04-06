@@ -1,5 +1,6 @@
 node_modules
 crx
+npm-debug.log
 notes.txt
 .DS_Store
 .idea
