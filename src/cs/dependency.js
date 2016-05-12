@@ -9,6 +9,7 @@
   var totalComplete = 0;
   var currentCardId = null;
   var currentChecklistId = null;
+  var checklistItems = {};
 
   var errorHandler = function(e) {
     console.log('ERROR', e);
@@ -128,18 +129,23 @@
   /**
    * mark a given checklist item complete
    * @param {string} itemId
-   * @return {Promise}
+   * @return {undefined}
    */
   var markChecklistItemComplete = function(itemId) {
-    return $.ajax({
-      url: '/1/cards/' + currentCardId + '/checklist/' + currentChecklistId + '/checkItem/' + itemId,
-      contentType: 'application/json',
-      method: 'PUT',
-      data: JSON.stringify({
-        state: 'complete',
-        token: getToken()
-      })
-    });
+    $.get('/1/checklist/' + currentChecklistId + '/checkItems/' + itemId + '?fields=state').then(function(r){
+      if(r.state !== 'complete'){
+        $.ajax({
+          url: '/1/cards/' + currentCardId + '/checklist/' + currentChecklistId + '/checkItem/' + itemId,
+          contentType: 'application/json',
+          method: 'PUT',
+          data: JSON.stringify({
+            state: 'complete',
+            token: getToken()
+          })
+        });
+      }
+    }, errorHandler);
+
   };
 
   /**
@@ -185,6 +191,7 @@
    * @return {undefined}
    */
   var updatePercentCompleted = function() {
+    // console.log('totalComplete', totalComplete, 'totalItems', totalItems);
     if (totalComplete) {
       var percent = (totalComplete / totalItems * 100).toFixed(0);
       var widget = getWidget();
@@ -200,9 +207,15 @@
    */
   var removeDependencyHandler = function(e) {
     var el = $(e.currentTarget).parents('.checklist-item');
-    removeItemFromChecklist(e.currentTarget.dataset.id).then(function() {
-      totalItems--;
+    var itemId = e.currentTarget.dataset.id;
+    removeItemFromChecklist(itemId).then(function() {
       el.remove();
+      totalItems--;
+      // console.log('itemId', itemId, checklistItems[itemId]);
+      if(checklistItems[itemId] && checklistItems[itemId].state === 'complete'){
+        // console.log('totalComplete--');
+        totalComplete--;
+      }
       updatePercentCompleted();
     }, errorHandler);
   };
@@ -221,7 +234,7 @@
     var labels = card.labels.map(function(label){
       var doneCls = '';
       var style = 'color:'+label.color;
-      if(/^done$/i.test(label.name)){
+      if(/^(done|complete)$/i.test(label.name)){
         style = '';
         doneCls = 'done';
         isComplete = true;
@@ -293,7 +306,7 @@
     getCardInfo(link).then(function(card) {
       if (card.id) {
         addItemToCheckList(link).then(function(item) {
-          console.log('checkItemslink', item);
+          checklistItems[item.id] = item;
           inputField.val('');
           totalItems++;
           hideOriginalChecklist();
@@ -336,6 +349,7 @@
 
         checklist.checkItems.forEach(function(item, index) {
           getCardInfo(item.name).then(function(card) {
+            checklistItems[item.id] = item;
             addToList(card, item.id, index);
           }, errorHandler);
         });
@@ -355,7 +369,8 @@
     if (data.__ns !== CHECKLIST_NAME) {
       return;
     }
-    console.log('FROM BG', data);
+    // console.log('FROM BG', data);
+    checklistItems = {};
 
     setTimeout(function() {
       if (location.pathname.match(/^\/c\//)) {
