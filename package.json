@@ -1,7 +1,7 @@
 {
   "name": "trello_card_dependency",
   "description": "Adds card dependency capability to Trello's web interface",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "license": "MIT",
   "private": true,
   "scripts": {
